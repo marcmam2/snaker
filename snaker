@@ -1,0 +1,120 @@
+#!/usr/bin/env ruby
+
+require 'io/console'
+
+UP    = '[A'
+RIGHT = '[C'
+DOWN  = '[B'
+LEFT  = '[D'
+
+# Temptative values for Windows
+# UP    = "#{224.chr}H"
+# RIGHT = "#{224.chr}M"
+# DOWN  = "#{224.chr}P"
+# LEFT  = "#{224.chr}K"
+
+INNER_HEIGHT = 10
+
+def print_playfield
+  puts 'xxxxxxxxxx'
+
+  INNER_HEIGHT.times { puts 'x        x' }
+
+  puts 'xxxxxxxxxx'
+end
+
+def print_snake(snake)
+p snake
+gets
+  snake.each do |snake_bit|
+    $stdout.cursor_up(INNER_HEIGHT + 2)
+    # $stdout.cursor_left(0)
+
+    $stdout.cursor_down(snake_bit[:vertical_position])
+    $stdout.cursor_right(snake_bit[:horizontal_position])
+
+    puts '#'
+  end
+end
+
+def update_snake(snake, current_direction, key = current_direction, target)
+  key = current_direction if current_direction == UP && key == DOWN ||
+                             current_direction == RIGHT && key == LEFT ||
+                             current_direction == DOWN && key == UP ||
+                             current_direction == LEFT && key == RIGHT ||
+                             (key != UP && key != RIGHT && key != DOWN && key != LEFT)
+
+  snake << case key
+           when UP
+             {horizontal_position: snake.last[:horizontal_position], vertical_position: snake.last[:vertical_position] - 1}
+           when RIGHT
+             {horizontal_position: snake.last[:horizontal_position] + 1, vertical_position: snake.last[:vertical_position]}
+           when DOWN
+             {horizontal_position: snake.last[:horizontal_position], vertical_position: snake.last[:vertical_position] + 1}
+           when LEFT
+             {horizontal_position: snake.last[:horizontal_position] - 1, vertical_position: snake.last[:vertical_position]}
+           else puts 'problema na detecção da direção'
+           end
+
+  snake.slice!(0) unless got_target?(snake, target)
+end
+
+def got_target?(snake, target)
+  snake.last == target
+end
+
+def colision?
+end
+
+def update_direction(key, current_direction)
+  case key
+  when UP    then UP    unless current_direction == DOWN
+  when RIGHT then RIGHT unless current_direction == LEFT
+  when DOWN  then DOWN  unless current_direction == UP
+  when LEFT  then LEFT  unless current_direction == RIGHT
+  else current_direction
+  end
+end
+
+def print_target(target)
+  $stdout.cursor_down(target[:vertical_position])
+  $stdout.cursor_right(target[:horizontal_position])
+
+  puts '@'
+end
+
+current_direction = UP
+
+snake = [{ horizontal_position: 4, vertical_position: 11 }, { horizontal_position: 4, vertical_position: 10 }, { horizontal_position: 4, vertical_position: 9 }]
+
+target = {horizontal_position: rand(2..5), vertical_position: rand(2..5)}
+
+iteration = 0
+
+loop do
+  $stdout.clear_screen
+  
+  puts "playtime: #{iteration} s"
+
+  print_playfield
+
+  print_snake(snake)
+  
+  print_target(target)
+	
+  start_time = Time.now
+
+  $stdin.getch(min: 0, time: 1, intr: true)
+  key = $stdin.raw(min: 0, time: 0.001, intr: true) { gets }  # talvez fazer um gets/getch e pegar o último
+	
+  while Time.now - start_time < 1
+    # go go go doing nothing FAST!!!
+  end
+  
+  update_snake(snake, current_direction, key, target)
+
+  current_direction = update_direction(key, current_direction)
+  
+  iteration += 1
+end
+
