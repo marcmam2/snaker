@@ -24,11 +24,9 @@ def print_playfield
 end
 
 def print_snake(snake)
-p snake
-gets
   snake.each do |snake_bit|
     $stdout.cursor_up(INNER_HEIGHT + 2)
-    # $stdout.cursor_left(0)
+    $stdout.cursor_left(10)
 
     $stdout.cursor_down(snake_bit[:vertical_position])
     $stdout.cursor_right(snake_bit[:horizontal_position])
@@ -83,9 +81,14 @@ def print_target(target)
   puts '@'
 end
 
-current_direction = UP
+def reposition_cursor
+  $stdout.cursor_up(100)
+  $stdout.cursor_left(200)
+end
 
-snake = [{ horizontal_position: 4, vertical_position: 11 }, { horizontal_position: 4, vertical_position: 10 }, { horizontal_position: 4, vertical_position: 9 }]
+current_direction = RIGHT
+
+snake = [{ horizontal_position: 1, vertical_position: 1 }, { horizontal_position: 2, vertical_position: 1 }, { horizontal_position: 3, vertical_position: 1 }]
 
 target = {horizontal_position: rand(2..5), vertical_position: rand(2..5)}
 
@@ -95,12 +98,20 @@ loop do
   $stdout.clear_screen
   
   puts "playtime: #{iteration} s"
+  
+  reposition_cursor
 
   print_playfield
+  
+  reposition_cursor
 
   print_snake(snake)
   
+  reposition_cursor
+  
   print_target(target)
+  
+  reposition_cursor
 	
   start_time = Time.now
 
