@@ -110,13 +110,11 @@ def reposition_cursor
 end
 
 def update_target(snake)
-  new_target = {horizontal_position: rand(1..INNER_LENGTH), vertical_position: rand(2..INNER_HEIGHT + 1)}
-
-  while snake.include?(new_target)
+  loop do
     new_target = {horizontal_position: rand(1..INNER_LENGTH), vertical_position: rand(2..INNER_HEIGHT + 1)}
-  end
 
-  new_target
+    return new_target unless snake.include?(new_target)
+  end
 end
 
 current_direction = RIGHT
