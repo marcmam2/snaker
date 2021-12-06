@@ -13,65 +13,88 @@ LEFT  = '[D'
 # DOWN  = "#{224.chr}P"
 # LEFT  = "#{224.chr}K"
 
-INNER_HEIGHT = 10
+INNER_HEIGHT = 15
+INNER_LENGTH = 15
+
+ITERATION_PERIOD = 0.1
 
 def print_playfield
-  puts 'xxxxxxxxxx'
+  print '+', '=' * (INNER_LENGTH), '+', "\n"
 
-  INNER_HEIGHT.times { puts 'x        x' }
+  INNER_HEIGHT.times { print '|', ' ' * INNER_LENGTH, '|', "\n" }
 
-  puts 'xxxxxxxxxx'
+  print '+', '=' * (INNER_LENGTH), '+'
 end
 
 def print_snake(snake)
   snake.each do |snake_bit|
-    $stdout.cursor_up(INNER_HEIGHT + 2)
-    $stdout.cursor_left(10)
+    reposition_cursor  # por que aqui? por que não no final??
 
     $stdout.cursor_down(snake_bit[:vertical_position])
     $stdout.cursor_right(snake_bit[:horizontal_position])
 
-    puts '#'
+    puts case snake_bit
+         when snake.first then 'o'
+         when snake.last then 'X'
+         else '#'
+         end
   end
 end
 
 def update_snake(snake, current_direction, key = current_direction, target)
-  key = current_direction if current_direction == UP && key == DOWN ||
-                             current_direction == RIGHT && key == LEFT ||
-                             current_direction == DOWN && key == UP ||
-                             current_direction == LEFT && key == RIGHT ||
+  key = current_direction if (current_direction == UP && key == DOWN) ||
+                             (current_direction == RIGHT && key == LEFT) ||
+                             (current_direction == DOWN && key == UP) ||
+                             (current_direction == LEFT && key == RIGHT) ||
                              (key != UP && key != RIGHT && key != DOWN && key != LEFT)
 
   snake << case key
            when UP
-             {horizontal_position: snake.last[:horizontal_position], vertical_position: snake.last[:vertical_position] - 1}
+             {horizontal_position: snake.last[:horizontal_position],
+              vertical_position: snake.last[:vertical_position] - 1}
            when RIGHT
-             {horizontal_position: snake.last[:horizontal_position] + 1, vertical_position: snake.last[:vertical_position]}
+             {horizontal_position: snake.last[:horizontal_position] + 1,
+              vertical_position: snake.last[:vertical_position]}
            when DOWN
-             {horizontal_position: snake.last[:horizontal_position], vertical_position: snake.last[:vertical_position] + 1}
+             {horizontal_position: snake.last[:horizontal_position],
+              vertical_position: snake.last[:vertical_position] + 1}
            when LEFT
-             {horizontal_position: snake.last[:horizontal_position] - 1, vertical_position: snake.last[:vertical_position]}
+             {horizontal_position: snake.last[:horizontal_position] - 1,
+              vertical_position: snake.last[:vertical_position]}
            else puts 'problema na detecção da direção'
            end
 
-  snake.slice!(0) unless got_target?(snake, target)
+  snake.shift unless got_target?(snake, target)
 end
 
 def got_target?(snake, target)
   snake.last == target
 end
 
-def colision?
+def colision?(snake)
+  snake.last[:horizontal_position] == 0 || snake.last[:horizontal_position] == INNER_LENGTH + 1 ||
+  snake.last[:vertical_position] == 1 || snake.last[:vertical_position] == INNER_HEIGHT + 2 ||
+  snake[0..-2].include?(snake.last)
 end
 
 def update_direction(key, current_direction)
-  case key
-  when UP    then UP    unless current_direction == DOWN
-  when RIGHT then RIGHT unless current_direction == LEFT
-  when DOWN  then DOWN  unless current_direction == UP
-  when LEFT  then LEFT  unless current_direction == RIGHT
-  else current_direction
+  if (current_direction == UP && key == DOWN) || (current_direction == RIGHT && key == LEFT) ||
+     (current_direction == DOWN && key == UP) || (current_direction == LEFT && key == RIGHT) ||
+     (key != UP && key != RIGHT && key != DOWN && key != LEFT)
+    new_direction = current_direction
+  else
+    new_direction = key
   end
+
+  new_direction
+  # poderia fazer isso abaixo e new_direction ||= key acho
+#  case key
+ # when UP    then UP    unless current_direction == DOWN
+  #when RIGHT then RIGHT unless current_direction == LEFT
+#  when DOWN  then DOWN  unless current_direction == UP
+ # when LEFT  then LEFT  unless current_direction == RIGHT
+  #else current_direction
+#  end
 end
 
 def print_target(target)
@@ -82,50 +105,85 @@ def print_target(target)
 end
 
 def reposition_cursor
-  $stdout.cursor_up(100)
-  $stdout.cursor_left(200)
+  $stdout.cursor_up(INNER_HEIGHT + 2)
+  $stdout.cursor_left(INNER_LENGTH + 2)
+end
+
+def update_target(snake)
+  new_target = {horizontal_position: rand(1..INNER_LENGTH), vertical_position: rand(2..INNER_HEIGHT + 1)}
+
+  while snake.include?(new_target)
+    new_target = {horizontal_position: rand(1..INNER_LENGTH), vertical_position: rand(2..INNER_HEIGHT + 1)}
+  end
+
+  new_target
 end
 
 current_direction = RIGHT
 
-snake = [{ horizontal_position: 1, vertical_position: 1 }, { horizontal_position: 2, vertical_position: 1 }, { horizontal_position: 3, vertical_position: 1 }]
+snake = [{horizontal_position: 1, vertical_position: 2},
+         {horizontal_position: 2, vertical_position: 2},
+         {horizontal_position: 3, vertical_position: 2}]
 
-target = {horizontal_position: rand(2..5), vertical_position: rand(2..5)}
+target = update_target(snake)
 
 iteration = 0
 
+score = 0
+
 loop do
   $stdout.clear_screen
-  
-  puts "playtime: #{iteration} s"
-  
-  reposition_cursor
+
+  puts "playtime: #{iteration.to_i} s\tscore: #{score}"
 
   print_playfield
-  
+
   reposition_cursor
 
   print_snake(snake)
-  
+
   reposition_cursor
-  
+
   print_target(target)
-  
+
   reposition_cursor
-	
+
   start_time = Time.now
 
-  $stdin.getch(min: 0, time: 1, intr: true)
+  $stdin.getch(min: 0, time: ITERATION_PERIOD, intr: true)
   key = $stdin.raw(min: 0, time: 0.001, intr: true) { gets }  # talvez fazer um gets/getch e pegar o último
-	
-  while Time.now - start_time < 1
+
+  while Time.now - start_time < ITERATION_PERIOD
     # go go go doing nothing FAST!!!
   end
-  
+
   update_snake(snake, current_direction, key, target)
 
+  if got_target?(snake, target)
+    target = update_target(snake)
+
+    score += 1
+
+    $stdout.beep
+  end
+
+  if colision?(snake)
+    $stdout.beep
+    sleep(0.1)
+    $stdout.beep
+
+    break
+  end
+
   current_direction = update_direction(key, current_direction)
-  
-  iteration += 1
+
+  iteration += ITERATION_PERIOD
 end
 
+$stdout.cursor_down(INNER_HEIGHT + 4)
+
+puts 'Obrigado por jogar!'
+
+# tem como congelar ou tornar somente letitura o console?
+
+sleep (1)
