@@ -7,7 +7,7 @@ RIGHT = '[C'
 DOWN  = '[B'
 LEFT  = '[D'
 
-# Temptative values for Windows
+# Tentative values for Windows
 # UP    = "#{224.chr}H"
 # RIGHT = "#{224.chr}M"
 # DOWN  = "#{224.chr}P"
@@ -125,14 +125,14 @@ snake = [{horizontal_position: 1, vertical_position: 2},
 
 target = update_target(snake)
 
-iteration = 0
+playtime = 0
 
 score = 0
 
 loop do
   $stdout.clear_screen
 
-  puts "playtime: #{iteration.to_i} s\tscore: #{score}"
+  print "playtime: #{playtime.to_i} s", "\t", "score: #{score}", "\n"
 
   print_playfield
 
@@ -175,12 +175,12 @@ loop do
 
   current_direction = update_direction(key, current_direction)
 
-  iteration += ITERATION_PERIOD
+  playtime += ITERATION_PERIOD
 end
 
 $stdout.cursor_down(INNER_HEIGHT + 4)
 
-puts 'Obrigado por jogar!'
+puts 'Thank you for playing!'
 
 # tem como congelar ou tornar somente letitura o console?
 
